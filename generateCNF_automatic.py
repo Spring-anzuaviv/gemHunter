@@ -41,6 +41,6 @@ def generate_CNF(grid):
     return cnf
 
 #test
-grid = readfile(INPUT_0)
-clause = generate_CNF(grid)
-print("CNF: ", clause)
+# grid = readfile(INPUT_0)
+# clause = generate_CNF(grid)
+# print("CNF: ", clause)
