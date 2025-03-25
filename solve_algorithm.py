@@ -1,6 +1,8 @@
 from generateCNF_automatic import generate_CNF
 from utility import add_padding, pos_to_var
 from readfile import *
+from bruteforce_solve import *
+from backtracking_solve import *
 from pysat_solve import *
 import timeit
 
@@ -12,7 +14,7 @@ class LogData:
         self.measured_time = measured_time
         self.traps = 0
 
-def gem_hunter_solver(grid, algorithm='pysat', measure_time=False):
+def gem_hunter_solver(grid, algorithm, measure_time=False):
     KB = generate_CNF(grid)
     KB_reserved = [clause.copy() for clause in KB]
     
@@ -32,8 +34,8 @@ def gem_hunter_solver(grid, algorithm='pysat', measure_time=False):
     
     solver_methods = {
         "pysat": (solve_SAT_byPysat, [KB]),
-        # "backtracking": (solve_by_backtracking, [KB, empties]),
-        # "bruteforce": (solve_by_bruteforce, [KB, empties, numbers])
+        "backtracking": (solve_by_backtracking, [KB, empties]),
+        "bruteforce": (solve_by_bruteforce, [KB, empties, numbers])
     }
     func, args = solver_methods.get(algorithm, (None, None))  
     start = timeit.default_timer() if measure_time else None      
@@ -59,7 +61,8 @@ def gem_hunter_solver(grid, algorithm='pysat', measure_time=False):
 
 #test
 grid = readfile(INPUT_0)
-solution, log_info, KB = gem_hunter_solver(grid, measure_time=True)
-#solution, log_info, KB, time = solve(grid, measure_time=True)
+#solution, log_info, KB = gem_hunter_solver(grid, 'pysat', measure_time=True)
+#solution, log_info, KB = gem_hunter_solver(grid, 'bruteforce', measure_time=True)
+solution, log_info, KB = gem_hunter_solver(grid, 'backtracking', measure_time=True)
 print("Solution:", solution)
 print("Time taken:", log_info.measured_time, "ms")
