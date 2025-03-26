@@ -55,7 +55,7 @@ def gem_hunter_solver(grid, algorithm, measure_time=False):
         set_model = set(model)
         missing = {-empty for empty in set_empties if empty not in set_model and -empty not in set_model}
         
-        model.extend(missing)  # Thêm vào model
+        model.extend(missing)
         model.sort(key=abs)  # Sắp xếp theo giá trị tuyệt đối
         
         log_data.traps = sum(x > 0 for x in model)
@@ -64,22 +64,13 @@ def gem_hunter_solver(grid, algorithm, measure_time=False):
 
     return log_data, KB_reserved
 
-#test
-
-# grid = readfile(testcases["INPUT_0"])
-# #log_info, KB = gem_hunter_solver(grid, 'pysat', measure_time=True)
-# #log_info, KB = gem_hunter_solver(grid, 'bruteforce', measure_time=True)
-# log_info, KB = gem_hunter_solver(grid, 'backtracking', measure_time=True)
-# print(f"Solution {log_info.algorithm}: ", log_info.model)
-# print("Time taken:", log_info.measured_time, "ms")
-
 def main():
     while True:
         testcase_name = input("Input name of testcase (or enter 'X' to exit): ").strip().upper()
-    
         if testcase_name.upper() == 'X':  # Thoát vòng lặp nếu nhập 'X'
             break   
-
+        
+        method_name = input("Input name of method ['pysat', 'bruteforce', 'backtracking']: ").strip().lower()
         testcase_num = "" 
         for char in testcase_name:
             if char.isdigit():
@@ -89,39 +80,35 @@ def main():
         else:
             testcase_num = None
 
-        if testcase_name in testcases:  # Kiểm tra nếu tên test case hợp lệ
+        if testcase_name in testcases:
             testcase_path = testcases[testcase_name]
             
-            if os.path.exists(testcase_path):  # Kiểm tra file có tồn tại không
+            if os.path.exists(testcase_path):
                 grid = readfile(testcase_path)
-                print(f"Đã đọc file: {testcase_path}")
                 
-                # Gọi solver với 3 thuật toán
-                for method in ['pysat', 'bruteforce', 'backtracking']:
-                    print("=" * 40)
-                    print(f"Running Method: {method}")
+                if method_name in ['pysat', 'backtracking', 'bruteforce']:
+                    log_data, KB = gem_hunter_solver(grid, method_name, measure_time=True)
+                    print(f"Solution {log_data.algorithm}: ", log_data.model)
+                    print("Time taken:", log_data.measured_time, "ms")
+                else:
+                    print("Error: Invalid method. Input again.")
+                    continue
 
-                    log_info, KB = gem_hunter_solver(grid, method, measure_time=True)  
+                result = result_grid(grid, log_data.model)
 
-                    print(f"Solution: {log_info.model}")
-                    print(f"Time taken: {log_info.measured_time:.6f} ms")
-                    print("=" * 40 + "\n")
-
-                    # Lưu kết quả
-                    result = result_grid(grid, log_info.model)
-
-                    if testcase_num == 0:
-                        writefile(testcases["OUTPUT_0"], result)
-                    elif testcase_num == 1:
-                        writefile(testcases["OUTPUT_1"], result)
-                    elif testcase_num == 2:
-                        writefile(testcases["OUTPUT_2"], result)
-                    elif testcase_num == 3:
-                        writefile(testcases["OUTPUT_3"], result)
+                if testcase_num == 0:
+                    writefile(testcases["OUTPUT_0"], result)
+                elif testcase_num == 1:
+                    writefile(testcases["OUTPUT_1"], result)
+                elif testcase_num == 2:
+                    writefile(testcases["OUTPUT_2"], result)
+                elif testcase_num == 3:
+                    writefile(testcases["OUTPUT_3"], result)
             else:
-                print(f"Lỗi: File '{testcase_path}' không tồn tại.")
+                print(f"Error: File '{testcase_path}' no exit.")
         else:
-            print(f"Lỗi: Không tìm thấy test case '{testcase_name}'. Hãy nhập lại.")
+            print(f"Error: Do not find test case '{testcase_name}'. Input again.")
+        print("=" * 40 + "\n")
 
 if __name__ == "__main__":
     main()

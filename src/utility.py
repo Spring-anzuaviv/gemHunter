@@ -1,6 +1,6 @@
 from itertools import combinations
 import os
-testcases_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Testcases'))
+testcases_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Testcases'))
 
 testcases = {
     "INPUT_0": os.path.join(testcases_dir, "input_0.txt"),
