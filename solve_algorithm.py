@@ -1,5 +1,5 @@
 from generateCNF_automatic import generate_CNF
-from utility import add_padding, pos_to_var
+from utility import *
 from readfile import *
 from bruteforce_solve import *
 from backtracking_solve import *
@@ -7,11 +7,12 @@ from pysat_solve import *
 import timeit
 
 class LogData:
-    def __init__(self, algorithm, num_CNF, num_empties, measured_time=None):
+    def __init__(self, algorithm, num_CNF, num_empties, solution, measured_time=None):
         self.algorithm = algorithm
         self.num_CNF = num_CNF
         self.num_empties = num_empties
         self.measured_time = measured_time
+        self.model = solution
         self.traps = 0
 
 def gem_hunter_solver(grid, algorithm, measure_time=False):
@@ -40,10 +41,13 @@ def gem_hunter_solver(grid, algorithm, measure_time=False):
     func, args = solver_methods.get(algorithm, (None, None))  
     start = timeit.default_timer() if measure_time else None      
 
-    model = func(*args) if func else None
-
+    if func:
+        model = func(*args)
+    else: 
+        model = None
+    
     measured_time = (timeit.default_timer() - start) * 1000 if measure_time and start is not None else None
-    log_data = LogData(algorithm, len(KB), len(empties), measured_time)
+    log_data = LogData(algorithm, len(KB), len(empties), model, measured_time)
 
     if model is not None:
         set_empties = set(empties)
@@ -55,14 +59,69 @@ def gem_hunter_solver(grid, algorithm, measure_time=False):
         model.sort(key=abs)  # Sắp xếp theo giá trị tuyệt đối
         
         log_data.traps = sum(x > 0 for x in model)
-        return model, log_data, KB_reserved
+        log_data.model = model
+        return log_data, KB_reserved
 
-    return None, log_data, KB_reserved
+    return log_data, KB_reserved
 
 #test
-grid = readfile(INPUT_0)
-#solution, log_info, KB = gem_hunter_solver(grid, 'pysat', measure_time=True)
-#solution, log_info, KB = gem_hunter_solver(grid, 'bruteforce', measure_time=True)
-solution, log_info, KB = gem_hunter_solver(grid, 'backtracking', measure_time=True)
-print("Solution:", solution)
-print("Time taken:", log_info.measured_time, "ms")
+
+# grid = readfile(testcases["INPUT_0"])
+# #log_info, KB = gem_hunter_solver(grid, 'pysat', measure_time=True)
+# #log_info, KB = gem_hunter_solver(grid, 'bruteforce', measure_time=True)
+# log_info, KB = gem_hunter_solver(grid, 'backtracking', measure_time=True)
+# print(f"Solution {log_info.algorithm}: ", log_info.model)
+# print("Time taken:", log_info.measured_time, "ms")
+
+def main():
+    while True:
+        testcase_name = input("Input name of testcase (or enter 'X' to exit): ").strip().upper()
+    
+        if testcase_name.upper() == 'X':  # Thoát vòng lặp nếu nhập 'X'
+            break   
+
+        testcase_num = "" 
+        for char in testcase_name:
+            if char.isdigit():
+                testcase_num += char
+        if testcase_num:
+            testcase_num = int(testcase_num)
+        else:
+            testcase_num = None
+
+        if testcase_name in testcases:  # Kiểm tra nếu tên test case hợp lệ
+            testcase_path = testcases[testcase_name]
+            
+            if os.path.exists(testcase_path):  # Kiểm tra file có tồn tại không
+                grid = readfile(testcase_path)
+                print(f"Đã đọc file: {testcase_path}")
+                
+                # Gọi solver với 3 thuật toán
+                for method in ['pysat', 'bruteforce', 'backtracking']:
+                    print("=" * 40)
+                    print(f"Running Method: {method}")
+
+                    log_info, KB = gem_hunter_solver(grid, method, measure_time=True)  
+
+                    print(f"Solution: {log_info.model}")
+                    print(f"Time taken: {log_info.measured_time:.6f} ms")
+                    print("=" * 40 + "\n")
+
+                    # Lưu kết quả
+                    result = result_grid(grid, log_info.model)
+
+                    if testcase_num == 0:
+                        writefile(testcases["OUTPUT_0"], result)
+                    elif testcase_num == 1:
+                        writefile(testcases["OUTPUT_1"], result)
+                    elif testcase_num == 2:
+                        writefile(testcases["OUTPUT_2"], result)
+                    elif testcase_num == 3:
+                        writefile(testcases["OUTPUT_3"], result)
+            else:
+                print(f"Lỗi: File '{testcase_path}' không tồn tại.")
+        else:
+            print(f"Lỗi: Không tìm thấy test case '{testcase_name}'. Hãy nhập lại.")
+
+if __name__ == "__main__":
+    main()
