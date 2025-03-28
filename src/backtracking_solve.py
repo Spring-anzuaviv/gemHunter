@@ -75,6 +75,32 @@ def solve_by_backtracking(KB, empties):
 
         KB = new_KB
         return KB, model
+    
+    def propagate(KB, assigned_literal):
+        """
+        Xóa các clause được thỏa mãn bởi assigned_literal
+        và xóa literal bù trừ trong các clause còn lại.
+        Nếu sinh ra clause rỗng => mâu thuẫn => return None
+        """
+        new_KB = []
+        for clause in KB:
+            # Nếu clause chứa assigned_literal, clause này đã được thỏa => bỏ qua
+            if assigned_literal in clause:
+                continue
+
+            # Nếu clause chứa -assigned_literal, ta phải xóa -assigned_literal
+            if -assigned_literal in clause:
+                new_clause = [lit for lit in clause if lit != -assigned_literal]
+                # Nếu sau khi xóa literal, clause thành rỗng => xung đột
+                if len(new_clause) == 0:
+                    return None
+                new_KB.append(new_clause)
+            else:
+                # Giữ nguyên clause nếu không liên quan
+                new_KB.append(clause)
+
+        return new_KB
+
 
     # **Chọn biến thông minh hơn**: Biến xuất hiện nhiều nhất trong KB:
     def choose_best_variable(KB):
@@ -91,7 +117,9 @@ def solve_by_backtracking(KB, empties):
             return None
 
         KB, model = pure_literal_elimination(KB, model)
-        if not KB:
+        if KB is None:
+            return None
+        if not KB:  # Nếu rỗng => đã thỏa
             return model if checking_cnf(KB, model) else None
 
         var = choose_best_variable(KB)
@@ -99,12 +127,23 @@ def solve_by_backtracking(KB, empties):
             return None
 
         # Thử gán True trước
-        result = backtracking_util([clause.copy() for clause in KB], deepcopy(model) + [var])
+        model_true = deepcopy(model)
+        model_true.append(var)
+        KB_true = propagate([clause.copy() for clause in KB], var)
+        if KB_true is not None:  # propagate không trả về None
+            result = backtracking_util(KB_true, model_true)
         if result is not None:
             return result
 
         # Nếu thất bại, thử gán False
-        result = backtracking_util([clause.copy() for clause in KB], deepcopy(model) + [-var])
-        return result
+        model_false = deepcopy(model)
+        model_false.append(-var)
+        KB_false = propagate([clause.copy() for clause in KB], -var)
+        if KB_false is not None:
+            result = backtracking_util(KB_false, model_false)
+        if result is not None:
+            return result
+        
+        return None
 
     return backtracking_util(KB, [])

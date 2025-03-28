@@ -39,8 +39,3 @@ def generate_CNF(grid):
                     cnf.extend(generate_clauses(unknowns_1D, trap_count))
     cnf = [list(clause) for clause in sorted({tuple(sorted(clause)) for clause in cnf}, key=lambda x: (len(x), x))]
     return cnf
-
-#test
-# grid = readfile(INPUT_0)
-# clause = generate_CNF(grid)
-# print("CNF: ", clause)
